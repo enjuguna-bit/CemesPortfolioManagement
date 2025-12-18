@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: arrears-manager-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:create_app()
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.10.12 # Specify a Python version supported by Render
+    plan: free # Use the free tier
