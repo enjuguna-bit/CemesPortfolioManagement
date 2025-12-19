@@ -4,17 +4,10 @@ Provides file validation, schema validation, and security checks
 """
 from flask import request
 from werkzeug.datastructures import FileStorage
+from middleware.error_handler import ValidationError
 from typing import List, Dict, Any, Optional
 import re
 import os
-
-
-class ValidationError(Exception):
-    """Validation error exception"""
-    def __init__(self, message: str, field: Optional[str] = None):
-        self.message = message
-        self.field = field
-        super().__init__(message)
 
 
 def validate_file(
@@ -40,16 +33,21 @@ def validate_file(
     """
     if not file or file.filename == '':
         if required:
-            raise ValidationError('No file provided')
+            raise ValidationError('No file provided', details={'field': 'file'})
         return False
     
     # Check file extension
     if allowed_extensions:
         ext = get_file_extension(file.filename)
+        # Allow empty extension if we want to be very lenient, or just log it
         if ext not in allowed_extensions:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"File validation failed. Filename: '{file.filename}', Extracted extension: '{ext}', Allowed: {allowed_extensions}")
+            
             raise ValidationError(
-                f'Invalid file type. Allowed: {", ".join(allowed_extensions)}',
-                field='file'
+                f"Invalid file type '{ext}'. Allowed: {', '.join(allowed_extensions)}",
+                details={'field': 'file', 'filename': file.filename, 'extension': ext}
             )
     
     # Check file size
@@ -62,7 +60,7 @@ def validate_file(
             max_mb = max_size / (1024 * 1024)
             raise ValidationError(
                 f'File too large. Maximum size: {max_mb:.1f}MB',
-                field='file'
+                details={'field': 'file'}
             )
     
     return True
@@ -100,7 +98,7 @@ def validate_email(email: str) -> bool:
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     
     if not re.match(pattern, email):
-        raise ValidationError('Invalid email address format', field='email')
+        raise ValidationError('Invalid email address format', details={'field': 'email'})
     
     return True
 
@@ -124,7 +122,7 @@ def validate_phone(phone: str, country_code: Optional[str] = None) -> bool:
     
     # Basic validation: should be digits and optional + at start
     if not re.match(r'^\+?[0-9]{10,15}$', cleaned):
-        raise ValidationError('Invalid phone number format', field='phone')
+        raise ValidationError('Invalid phone number format', details={'field': 'phone'})
     
     return True
 
@@ -177,13 +175,13 @@ def validate_string_length(
     if min_length and len(value) < min_length:
         raise ValidationError(
             f'{field_name} must be at least {min_length} characters',
-            field=field_name
+            details={'field': field_name}
         )
     
     if max_length and len(value) > max_length:
         raise ValidationError(
             f'{field_name} must be at most {max_length} characters',
-            field=field_name
+            details={'field': field_name}
         )
     
     return True
@@ -213,13 +211,13 @@ def validate_numeric_range(
     if min_value is not None and value < min_value:
         raise ValidationError(
             f'{field_name} must be at least {min_value}',
-            field=field_name
+            details={'field': field_name}
         )
     
     if max_value is not None and value > max_value:
         raise ValidationError(
             f'{field_name} must be at most {max_value}',
-            field=field_name
+            details={'field': field_name}
         )
     
     return True
@@ -267,7 +265,7 @@ def validate_json_schema(data: Dict[str, Any], schema: Dict[str, Any]) -> bool:
     for field, rules in schema.items():
         # Check required
         if rules.get('required') and field not in data:
-            raise ValidationError(f'Missing required field: {field}', field=field)
+            raise ValidationError(f'Missing required field: {field}', details={'field': field})
         
         if field not in data:
             continue
@@ -290,7 +288,7 @@ def validate_json_schema(data: Dict[str, Any], schema: Dict[str, Any]) -> bool:
                 if not isinstance(value, type_map[expected_type]):
                     raise ValidationError(
                         f'{field} must be of type {expected_type}',
-                        field=field
+                        details={'field': field}
                     )
         
         # Check string length
@@ -311,7 +309,7 @@ def validate_json_schema(data: Dict[str, Any], schema: Dict[str, Any]) -> bool:
         if 'enum' in rules and value not in rules['enum']:
             raise ValidationError(
                 f'{field} must be one of: {", ".join(map(str, rules["enum"]))}',
-                field=field
+                details={'field': field}
             )
     
     return True

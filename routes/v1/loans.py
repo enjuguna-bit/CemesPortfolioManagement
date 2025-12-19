@@ -1,4 +1,4 @@
-"""
+﻿"""
 Loan processing endpoints with mobile optimizations
 Refactored from original app.py with pagination, caching, and field selection
 """
@@ -14,8 +14,8 @@ import tempfile
 import logging
 
 # Import original processing modules
-from Arreas_collected import ArrearsProcessor
-from arrange_Dues import generate_arranged_report
+from Arreas_collected import ArrearsProcessorAPI as ArrearsProcessor
+from arrange_Dues import generate_loan_report as generate_arranged_report
 from arrange_arrears import create_enterprise_dashboard
 from MTD_unpaid_dues import main as process_unpaid_dues
 from MTD_parameters_branch_comparison import BranchPerformanceAnalyzer

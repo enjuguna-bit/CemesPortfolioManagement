@@ -26,9 +26,12 @@ def init_db(app):
     # Initialize Flask-Migrate
     migrate.init_app(app, db)
     
-    # Create tables if they don't exist
+    # Create tables if they don't exist# NOTE: Must import models before create_all() so SQLAlchemy knows about them
     with app.app_context():
         try:
+            # Import all models to register them with SQLAlchemy
+            import models  # noqa: F401
+            
             db.create_all()
             logger.info("Database tables created successfully")
         except Exception as e:

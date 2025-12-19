@@ -72,7 +72,17 @@ htmlcov/
 .ipynb_checkpoints
 
 # Android App
-android-app/
+# android-app/  # Temporarily disabled for debugging
 bin/
 obj/
 
+
+# Data files
+*.csv
+*.xlsx
+
+# Debug scripts
+debug_*.py
+test_endpoints.py
+verify_fix.py
+get_error_details.py

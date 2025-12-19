@@ -49,7 +49,7 @@ class Config:
     CACHE_DEFAULT_TIMEOUT = int(os.getenv('CACHE_DEFAULT_TIMEOUT', 300))
     
     # Rate Limiting
-    RATELIMIT_STORAGE_URL = os.getenv('RATELIMIT_STORAGE_URL', 'redis://localhost:6379/1')
+    RATELIMIT_STORAGE_URL = os.getenv('RATELIMIT_STORAGE_URL', 'memory://')  # Use in-memory for development
     RATELIMIT_DEFAULT = os.getenv('RATELIMIT_DEFAULT', '100/hour')
     RATELIMIT_HEADERS_ENABLED = True
     RATELIMIT_SWALLOW_ERRORS = False

@@ -107,7 +107,8 @@ def handle_api_error(error):
             'correlation_id': correlation_id,
             'error_code': error.code,
             'status_code': error.status_code,
-            'message': error.message,
+            'status_code': error.status_code,
+            'error_message': error.message,
             'details': error.details
         }
     )
@@ -153,7 +154,8 @@ def handle_http_exception(error):
         extra={
             'correlation_id': correlation_id,
             'status_code': error.code,
-            'message': error.description
+            'status_code': error.code,
+            'error_message': error.description
         }
     )
     

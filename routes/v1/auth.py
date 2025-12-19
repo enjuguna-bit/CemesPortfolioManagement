@@ -60,7 +60,8 @@ def register():
     logger.info(f"New user registered: {user.username}")
     
     # Generate tokens
-    auth = AuthMiddleware()
+    from flask import current_app
+    auth = AuthMiddleware(current_app)
     device_id = request.headers.get('X-Device-Id')
     
     access_token = auth.generate_access_token(user.id, device_id, user.roles)
@@ -136,7 +137,8 @@ def login():
     user.update_last_login()
     
     # Generate tokens
-    auth = AuthMiddleware()
+    from flask import current_app
+    auth = AuthMiddleware(current_app)
     device_id = request.headers.get('X-Device-Id')
     
     access_token = auth.generate_access_token(user.id, device_id, user.roles)
@@ -176,7 +178,8 @@ def refresh():
     if not data.get('refresh_token'):
         raise ValidationError('Refresh token is required')
     
-    auth = AuthMiddleware()
+    from flask import current_app
+    auth = AuthMiddleware(current_app)
     
     # Verify refresh token
     payload = auth.verify_token(data['refresh_token'], 'refresh')

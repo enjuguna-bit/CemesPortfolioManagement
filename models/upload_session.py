@@ -34,7 +34,7 @@ class UploadSession(db.Model):
     status = db.Column(db.String(50), default='initiated')  # initiated, uploading, completed, failed, expired
     
     # Metadata
-    metadata = db.Column(db.JSON, default=dict)  # Additional metadata
+    upload_metadata = db.Column(db.JSON, default=dict)  # Additional metadata
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -55,7 +55,7 @@ class UploadSession(db.Model):
         # Set optional fields
         self.content_type = kwargs.get('content_type')
         self.chunk_size = kwargs.get('chunk_size', 1048576)
-        self.metadata = kwargs.get('metadata', {})
+        self.upload_metadata = kwargs.get('metadata', {})
     
     def add_chunk(self, chunk_number):
         """Mark chunk as uploaded"""

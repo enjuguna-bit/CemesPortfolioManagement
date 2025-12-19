@@ -6,6 +6,10 @@ import tempfile
 import pytest
 from flask import Flask
 
+# Import application factory
+from app import create_app
+from database import db
+
 
 class TestConfig:
     """Testing configuration"""
@@ -27,8 +31,29 @@ class TestConfig:
     UPLOAD_FOLDER = tempfile.mkdtemp()
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
     
-    # CORS
-    CORS_ORIGINS = ['http://localhost:3000']
+    # CORS parameters
+    CORS = {
+        'origins': '*',
+        'methods': ['GET', 'POST', 'PUT', 'DELETE'],
+        'allow_headers': ['Content-Type', 'Authorization']
+    }
+    
+    # Config keys needed by app factory
+    CORS_ORIGINS = '*'
+    CORS_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+    CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization', 'X-Device-Id']
+    CORS_EXPOSE_HEADERS = []
+    CORS_SUPPORTS_CREDENTIALS = True
+    CORS_MAX_AGE = 600
+    
+    RATELIMIT_STORAGE_URL = 'memory://'
+    RATELIMIT_DEFAULT = '100 per day'
+    RATELIMIT_HEADERS_ENABLED = True
+    
+    # Request timeout
+    REQUEST_TIMEOUT = 10
+    
+    API_VERSION = 'v1'
     
     # Disable external services
     FIREBASE_ENABLED = False
@@ -36,9 +61,34 @@ class TestConfig:
 
 
 @pytest.fixture(scope='session')
-def test_config():
-    """Provide test configuration"""
-    return TestConfig
+def app():
+    """Create application for the tests."""
+    app = create_app('testing')
+    app.config.from_object(TestConfig)
+    
+    # Override config values that might be missing in 'testing' env
+    app.config.update(
+        SQLALCHEMY_DATABASE_URI=TestConfig.SQLALCHEMY_DATABASE_URI,
+        TESTING=True
+    )
+    
+    with app.app_context():
+        db.create_all()
+        yield app
+        db.session.remove()
+        db.drop_all()
+
+
+@pytest.fixture(scope='function')
+def client(app):
+    """Create test client."""
+    return app.test_client()
+
+
+@pytest.fixture(scope='function')
+def runner(app):
+    """Create test runner."""
+    return app.test_cli_runner()
 
 
 @pytest.fixture(autouse=True)

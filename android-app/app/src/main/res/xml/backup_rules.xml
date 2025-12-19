@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <include domain="file" path="." />
+    <include domain="database" path="." />
+    <include domain="sharedpref" path="." />
+    <!-- Exclude authorization tokens from backup -->
+    <exclude domain="sharedpref" path="auth_prefs.xml"/>
+</full-backup-content>
